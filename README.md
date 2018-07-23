@@ -8,6 +8,8 @@ Google模型计算句向量，句向量效果的评估
 
 [sentence_vector_evaluation](https://github.com/arfu2016/nlp/tree/master/nlp_models/sentence_vector_evaluation)
 
+简单的评估一是可以看聚类，很多句子的情况下，意思相近的能不能聚在一起，相互之间相似度较大；二是看分类，最简单的就是k=1情况下的knn，有几个句子作为已有的带搜索的标准，给出新的句子，看它是不是和意思最为相近的句子相似度最大，也就是看分类是否正确。
+
 用词向量用baseline方法计算句向量
 
 [sentence_vector_aggregated](https://github.com/arfu2016/nlp/tree/master/nlp_models/sentence_vector_aggregated)

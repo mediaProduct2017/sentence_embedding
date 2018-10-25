@@ -28,6 +28,8 @@ Google模型计算句向量，句向量效果的评估
 
 前面提到的计算句向量的baseline方法是把组成句子的词向量用average pooling来得到句向量，根据code repository中的baseline_system.ipynb，除了average pooling，还可以用max pooling，average pooling的结果与max pooling的结果相连接，用n-gram model先average pooling再max pooling. 在[sentence_vector](https://github.com/arfu2016/nlp/tree/master/nlp_models/sentence_vector)中有实现。
 
+更好的实现在[work2](https://github.com/arfu2016/DuReader/tree/master/work2)当中。
+
 上面是简单的计算句向量的方法，可以说是non-parametric的方法，不需要根据数据来拟合，除此之外，还有parametric的方法，一般是用deep learning的方法，用cnn或者lstm的方法。
 
 cnn在[Text Classification with CNN and RNN](https://github.com/arfu2016/text-classification-cnn-rnn)中有实现，相比用n-gram model先average pooling再max pooling，多了不少待拟合的参数，多出来的参数个数是filter_size*word_embed_dimention*hidden_unit_number + hidden_unit_number，至少也是数以万计的参数。在得到cnn layer后，还要进行max pooling，得到单一向量，这一步和n-gram model中的max pooling没啥区别。

@@ -20,6 +20,8 @@ Google模型计算句向量，句向量效果的评估
 
 [sts-benchmark](https://github.com/arfu2016/nlp/tree/master/nlp_data/small/sts-benchmark)
 
+[sentence_vector_sts](https://github.com/arfu2016/nlp/blob/master/nlp_models/sentence_vector_evaluation/sentence_vector_sts.py)
+
 用句向量实现句子分类
 
 [sentence_similar_classification](https://github.com/arfu2016/nlp/tree/master/nlp_models/sentence_similar_classification)

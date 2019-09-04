@@ -12,9 +12,9 @@ import numpy as np
 import torch
 import torch.nn as nn
 import torch.utils.data
-import yaml
 from torch.nn.init import xavier_uniform_
 
+import yaml
 from tqdm import tqdm
 
 import lr_scheduler as L

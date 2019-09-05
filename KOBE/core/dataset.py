@@ -52,6 +52,7 @@ def load_data(config):
         valid_batch_size = config.valid_batch_size
     else:
         valid_batch_size = config.batch_size
+        # 与训练集相同
     valid_loader = torch.utils.data.DataLoader(
         dataset=valid_set,
         batch_size=valid_batch_size,

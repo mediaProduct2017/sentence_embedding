@@ -47,6 +47,7 @@ char: False # character-level encoding
 attention: 'luong_gate'
 param_init: 0
 param_init_glorot: True
+#不知道是什么初始化的参数?：决定是否使用xavier_uniform_来初始化参数
 emb_size: 512
 hidden_size: 512
 enc_num_layers: 6

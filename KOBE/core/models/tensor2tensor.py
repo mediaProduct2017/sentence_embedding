@@ -57,29 +57,34 @@ class LabelSmoothingLoss(nn.Module):
 
 
 class tensor2tensor(nn.Module):
-    """ transformer model """
+    """ transformer model，应该是transformer组合？
+    tensor2tensor可以说就是transformer2transformer，也有
+    encoder和decoder之分
+     """
     def __init__(self, config, use_attention=True,
                  encoder=None, decoder=None,
                  src_padding_idx=0, tgt_padding_idx=0,
                  label_smoothing=0, tgt_vocab=None):
+        # 用来生成描述的target vocab是否固定
         """
         Initialization of variables and functions
         :param config: configuration
         :param use_attention: use attention or not, consistent with seq2seq
+        是decoder对encoder的attention
         :param encoder: encoder
         :param decoder: decoder
         :param src_padding_idx: source padding index
         :param tgt_padding_idx: target padding index
-        :param label_smoothing: ratio for label smoothing
+        :param label_smoothing: ratio for label smoothing, label smoothing的比例
         :param tgt_vocab: target vocabulary
         """
-        super(tensor2tensor, self).__init__()
+        super(tensor2tensor, self).__init__()  # 调用父类
 
         self.config = config
 
         # pretrained encoder or not
         if encoder is not None:
-            self.encoder = encoder
+            self.encoder = encoder  # pretrained
         else:
             self.encoder = models.TransformerEncoder(
                 config, padding_idx=src_padding_idx)
@@ -90,13 +95,16 @@ class tensor2tensor(nn.Module):
                 self.knowledge_encoder = models.TransformerEncoder(
                     config, padding_idx=src_padding_idx)
                 config.src_vocab_size = src_vocab_size
+                # 知识图谱信息中用的词是生成描述中的词
         tgt_embedding = self.encoder.embedding if config.shared_vocab else None
         # pretrained decoder or not
         if decoder is not None:
             self.decoder = decoder
         else:
             self.decoder = models.TransformerDecoder(
-                config, tgt_embedding=tgt_embedding, padding_idx=tgt_padding_idx)
+                config, tgt_embedding=tgt_embedding,
+                padding_idx=tgt_padding_idx)
+            # 确定使用怎样的embedding
         # log softmax should specify dimension explicitly
         self.log_softmax = nn.LogSoftmax(dim=-1)
         self.use_cuda = config.use_cuda
@@ -106,19 +114,23 @@ class tensor2tensor(nn.Module):
             self.criterion = LabelSmoothingLoss(
                 label_smoothing, config.tgt_vocab_size,
                 ignore_index=tgt_padding_idx)
+            # 做label_smoothing
         else:
             self.criterion = nn.CrossEntropyLoss(ignore_index=utils.PAD)
         if config.use_cuda:
             self.criterion.cuda()
         self.compute_score = nn.Linear(
             config.hidden_size, config.tgt_vocab_size)
+        # 不确定是在干啥，self.compute_score似乎是一个提前定义好的函数，
+        # 用来做进softmax之前的全连接的
 
+        # 先不使用强化学习
         # Use rl or not. Should specify a reward provider. Not available yet in this framework.
         # if config.rl:
             # self.bleu_scorer = bleu.Scorer(pad=0, eos=3, unk=1)
             # self.reward_provider = CTRRewardProvider(config.ctr_reward_provider_path)
             # self.tgt_vocab = tgt_vocab
-        self.padding_idx = tgt_padding_idx
+        self.padding_idx = tgt_padding_idx  # 使用输出的padding
 
     def compute_loss(self, scores, targets):
         """

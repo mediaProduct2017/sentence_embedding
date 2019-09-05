@@ -17,9 +17,9 @@ from torch.nn.init import xavier_uniform_
 import yaml
 from tqdm import tqdm
 
-import lr_scheduler as L
+import lr_scheduler as L  # learning rate scheduler
 import models
-import opts
+import opts  # 从命令行读入的参数
 import utils
 from dataset import load_data
 from utils import misc_utils
@@ -29,6 +29,7 @@ from utils import misc_utils
 def build_model(checkpoints, config, device):
     """
     build model, either Seq2Seq or Tensor2Tensor
+    Tensor2Tensor就是transformer的组合
     :param checkpoints: load checkpoint if there is pretrained model
     :return: model, optimizer and the print function
     """
@@ -38,26 +39,30 @@ def build_model(checkpoints, config, device):
     print("building model...\n")
     model = getattr(models, config.model)(
         config,
-        src_padding_idx=utils.PAD,
-        tgt_padding_idx=utils.PAD,
-        label_smoothing=config.label_smoothing,
+        src_padding_idx=utils.PAD,  # 输入
+        tgt_padding_idx=utils.PAD,  # 输出
+        label_smoothing=config.label_smoothing,  # 啥是label_smoothing
+        # 是一个函数，在tensor2tensor.py当中
     )
-    model.to(device)
+    model.to(device)  # 把model加载到device上？
     if config.param_init != 0.0:
         for p in model.parameters():
             p.data.uniform_(-config.param_init, config.param_init)
+            # 给了一个随机初始化的范围
     if config.param_init_glorot:
         for p in model.parameters():
             if p.dim() > 1:
                 xavier_uniform_(p)
     if checkpoints is not None:
         model.load_state_dict(checkpoints["model"])
+        # 载入已有模型的准备？
     if config.pretrain:
         print("loading checkpoint from %s" % config.pretrain)
         pre_ckpt = torch.load(
             config.pretrain, map_location=lambda storage, loc: storage
         )["model"]
         model.load_state_dict(pre_ckpt)
+        # 载入已有模型
 
     optim = models.Optim(
         config.optim,
@@ -70,14 +75,17 @@ def build_model(checkpoints, config, device):
         decay_method=config.decay_method,
         warmup_steps=config.warmup_steps,
         model_size=config.hidden_size,
-    )
+    )  # 优化期的选择
     print(optim)
     optim.set_parameters(model.parameters())
     if checkpoints is not None:
         optim.optimizer.load_state_dict(checkpoints["optim"])
+        # 载入已有模型的优化器参数
 
-    param_count = sum([param.view(-1).size()[0] for param in model.parameters()])
-    print(repr(model) + "\n\n")
+    param_count = sum([param.view(-1).size()[0]
+                       for param in model.parameters()])
+    # 模型的参数或者说变量的个数
+    print(repr(model) + "\n\n")  # 模型的打印显示
     print("total number of parameters: %d\n\n" % param_count)
 
     return model, optim
@@ -328,13 +336,14 @@ if __name__ == "__main__":
 
     writer = misc_utils.set_tensorboard(config)
     device, devices_id = misc_utils.set_cuda(config)
-    misc_utils.set_seed(config.seed)
+    misc_utils.set_seed(config.seed)  # 可重复的随机性
 
     if config.label_dict_file:
         with open(config.label_dict_file, "r") as f:
             label_dict = json.load(f)
+    # 还不确定label_dict_file是什么文件，是一个json文件
 
-    if config.restore:
+    if config.restore:  # 模型的位置
         print("loading checkpoint...\n")
         checkpoints = torch.load(
             config.restore, map_location=lambda storage, loc: storage
@@ -344,7 +353,8 @@ if __name__ == "__main__":
 
     data = load_data(config)
     model, optim = build_model(checkpoints, config, device)
-    if config.schedule:
+    # optim是optimizer，待优化的loss function及对应的最优化方法
+    if config.schedule:  # schedule是learning rate schedule
         scheduler = L.CosineAnnealingLR(optim.optimizer, T_max=config.epoch)
 
     params = {
@@ -360,7 +370,7 @@ if __name__ == "__main__":
     if config.restore:
         params["updates"] = checkpoints["updates"]
 
-    if config.mode == "train":
+    if config.mode == "train":  # 可以在命令行中加入该参数
         for i in range(1, config.epoch + 1):
             if config.schedule:
                 scheduler.step()
@@ -370,3 +380,4 @@ if __name__ == "__main__":
             print("Best %s score: %.3f\n" % (metric, max(params[metric])))
     else:
         score = eval_model(model, data, params, config, device, writer)
+        # 验证集与验证函数

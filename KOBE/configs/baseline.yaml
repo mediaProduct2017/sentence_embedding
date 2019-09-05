@@ -35,7 +35,7 @@ schesamp: False # Scheduled sampling
 # Model
 model: 'tensor2tensor'
 ## Transformer
-positional: True
+positional: True  # transformer是否带位置信息？
 heads: 8
 d_ff: 2048
 ## RNN

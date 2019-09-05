@@ -135,7 +135,7 @@ class tensor2tensor(nn.Module):
     def compute_loss(self, scores, targets):
         """
         loss computation
-        :param scores: predicted scores
+        :param scores: predicted scores，此处需要传入
         :param targets: targets
         :return: loss
         """
@@ -227,7 +227,7 @@ class tensor2tensor(nn.Module):
 
     def greedy_sample(self, contexts):
         """
-        Greedy sampling
+        Greedy sampling，生成语句时用到
         :param contexts: source representations, [len, batch, size]
         :return: sampled ids.
         """
@@ -285,7 +285,7 @@ class tensor2tensor(nn.Module):
 
     def forward(self, src, src_len, dec, targets, knowledge, knowledge_len, teacher_ratio=1.0):
         """
-        run transformer
+        run transformer，给出网络结构？
         :param src: source input
         :param src_len: source length
         :param dec: decoder input
@@ -301,19 +301,26 @@ class tensor2tensor(nn.Module):
             knowledge = knowledge.t()
 
         if self.config.positional:
+            # 编码语句时是否加入位置信息？
             if self.config.knowledge:
                 mask = (knowledge.t() != 0).float()
-                knowledge_contexts = self.knowledge_encoder(knowledge, is_knowledge=True).transpose(0, 1)
+                knowledge_contexts = self.knowledge_encoder(
+                    knowledge, is_knowledge=True).transpose(0, 1)
+                # 用来编码知识的transformer
             contexts = self.encoder(src, src_len.tolist())  # [len, batch, size]
             if self.config.knowledge:
                 contexts = contexts.transpose(0, 1)
-                contexts = self.encoder.condition_context_attn(contexts, knowledge_contexts, mask)
+                contexts = self.encoder.condition_context_attn(
+                    contexts, knowledge_contexts, mask)
+                # 此处用来做title和knowledge的bi-attention，计算相互作用
                 contexts = self.encoder.bi_attn_transform(contexts)
                 contexts = contexts.transpose(0, 1)
         else:
             contexts, state = self.encoder(src, src_len.tolist())   # [len, batch, size]
+            # 有位置信息和没有位置信息self.encoder的输出是不同的？
 
         models.transformer.init_state(self.decoder, src, contexts, self.decoder.num_layers)
+        # transformer初始化
 
         # printing for debugging
         #self.decoder.init_state(src, contexts)
@@ -334,10 +341,13 @@ class tensor2tensor(nn.Module):
         if self.config.positional:
             outputs, attn_weights = self.decoder(dec, contexts) # [len, batch, size]
         else:
-            outputs, attn_weights, state = self.decoder(dec, contexts, state)   # [len, batch, size]
+            outputs, attn_weights, state = self.decoder(dec, contexts, state)
+            # [len, batch, size]
+            # self.decoder的返回数量也受self.config.positional的影响
 
         scores = self.compute_score(outputs.transpose(0, 1)).transpose(0, 1) # [len, batch, vocab]
         loss = self.compute_loss(scores, targets)
+        # self.compute_score和self.compute_loss在这里都遇到了
         return_dict['mle_loss'] = loss
 
         return return_dict, scores

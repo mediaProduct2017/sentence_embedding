@@ -96,12 +96,15 @@ def train_model(model, data, optim, epoch, params, config, device, writer):
     train_loader = data["train_loader"]
     log_vars = defaultdict(float)
 
-    for src, tgt, src_len, tgt_len, original_src, original_tgt, knowledge, knowledge_len in train_loader:
+    for src, tgt, src_len, tgt_len, original_src, original_tgt, \
+            knowledge, knowledge_len in train_loader:
         # put the tensors on cuda devices
         src, tgt = src.to(device), tgt.to(device)
         src_len, tgt_len = src_len.to(device), tgt_len.to(device)
+
         if config.knowledge:
-            knowledge, knowledge_len = knowledge.to(device), knowledge_len.to(device)
+            knowledge, knowledge_len = knowledge.to(device), \
+                                       knowledge_len.to(device)
         # original_src, original_tgt = original_src.to(device), original_tgt.to(device)
 
         model.zero_grad()

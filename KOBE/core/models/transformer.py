@@ -185,12 +185,14 @@ class TransformerEncoder(nn.Module):
         self.num_layers = config.enc_num_layers
 
         # HACK: 512 for word embeddings, 512 for condition embeddings
+        # condition embeddings?
         self.embedding = nn.Embedding(config.src_vocab_size, config.emb_size,
                                       padding_idx=padding_idx)
         # positional encoding
         if config.positional:
             self.position_embedding = PositionalEncoding(
                 config.dropout, config.emb_size)
+            # position_embedding可以是变量来拟合，比如bert中，也可以是按某个公式来算
         else:
             # RNN for positional information, waiting to be deprecated
             self.rnn = nn.LSTM(input_size=config.emb_size, hidden_size=config.hidden_size,
@@ -202,8 +204,12 @@ class TransformerEncoder(nn.Module):
              for _ in range(config.enc_num_layers)])
         self.layer_norm = nn.LayerNorm(config.hidden_size, eps=1e-6)
         self.padding_idx = padding_idx
-        self.condition_context_attn = BiAttention(config.hidden_size, config.dropout)
-        self.bi_attn_transform = nn.Linear(config.hidden_size * 4, config.hidden_size)
+        self.condition_context_attn = BiAttention(config.hidden_size,
+                                                  config.dropout)
+        # 这里为什么要做bi-attention，是为了做dropout吗
+        self.bi_attn_transform = nn.Linear(config.hidden_size * 4,
+                                           config.hidden_size)
+        # 此处应该是全连接
 
     def forward(self, src, lengths=None, is_knowledge=False):
         """
